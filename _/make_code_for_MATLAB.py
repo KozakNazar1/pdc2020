@@ -58,14 +58,12 @@ def generate_matlab_script(variant_number, variants_data):
     if not variant:
         return None
     
-    main_formula = variant['formula'] # main_formula = extract_matlab_formula(variant['formula'])
+    main_formula = variant['formula']
     b_i_formula = variant['b_i']
     y2_formula = variant['y2']
-    #a1_matlab_formula = extract_matlab_formula(a1_formula)
     Y3_formula = variant['Y3']
     C2_ij_formula_ = variant['C2_ij']
     
-    # Аналізуємо формулу b_i (парні/непарні)
     b_formula_even = "1/(i^2 + 2)"  # за замовчуванням
     b_formula_odd = "1/i"  # за замовчуванням
     
@@ -87,7 +85,7 @@ def generate_matlab_script(variant_number, variants_data):
     
     # Генеруємо MATLAB код
     matlab_code = f"""%% Варіант №{variant_number}
-% Обчислення виразу: {variant['formula']}
+% Обчислення виразу: {convert_formula_to_MATLAB(variant['formula'])}
 
 clear all; close all; clc;
 
@@ -202,26 +200,6 @@ y1 = A * b;
 disp('Вектор y1 = A*b:');
 disp(y1);
 
-%% 6_. Вектори b1 та c1 %%%%%%%%%%%%%%%%%%%% MOVE !!!!!!!!!!!!!!!!!!!!!
-%%if choice == 1
-%%     %% Ввід з клавіатури
-%%     disp('=== Ввід вектора b1 ===');
-%%     b1 = zeros(n);
-%%     for i = 1:n
-%%         b1(i) = input(sprintf('b1(%d) = ', i));
-%%     end
-%%
-%%    disp('=== Ввід вектора c1 ===');
-%%    c1 = zeros(n);
-%%    for i = 1:n
-%%        c1(i) = input(sprintf('c1(%d) = ', i));
-%%    end
-%%else
-%%    %% Dипадкові значення
-%%    b1 = rand(n, 1);
-%%    c1 = rand(n, 1);
-%%end
-
 %% 6. Обчислення y2:
 disp('Обчислення y2...');
 % Формула містить A1, b1, c1
@@ -255,7 +233,7 @@ disp('Обчислення x...');
 
 [r, c] = size(x);
 
-printf('Результат (');
+printf('Результат ');
 if strcmp(RESULT_TYPE, 'матриця') && r == n && c == n
     printf('матриця'); 
 elseif strcmp(RESULT_TYPE, 'стовпець') && r == n && c == 1
@@ -268,8 +246,9 @@ else
     printf('неочікуваний формат');
 end
 
-printf(') x:\\n');
+printf(' x:\\n');
 disp(x);
+printf('(варіант №{variant_number})');
 """
     
     return matlab_code
