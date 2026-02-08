@@ -44,9 +44,7 @@ def convert_to_normal_formula___________(formula_):
     
     return formula
 
-def convert_formula_to_MATLAB(formula_):
-    """Конвертує формулу у MATLAB синтаксис""" # (+)
-    formula = formula_
+def convert_formula_to_MATLAB(formula):
     formula = formula.replace('_{1}', '1')#.replace('_1', '1')
     formula = formula.replace('_{2}', '2')#.replace('_2', '2')
     formula = formula.replace('_{3}', '3')#.replace('_3', '3')
@@ -55,11 +53,12 @@ def convert_formula_to_MATLAB(formula_):
     formula = formula.replace('_{i}', '(i)')#.replace('_i', '(i)')
     formula = formula.replace('_{j}', '(j)')#.replace('_j', '(j)')
     formula = formula.replace('_{ij}', '(i,j)')#.replace('_ij', '(i,j)')
-    #formula = formula.replace("'", "ᵀ")
+    formula = formula.replace('_{2ij}', '2(i,j)')#.replace('_2ij', '2(i,j)')
+    formula = formula.replace("^{'}", "'")
     
     return formula
 
-def extract_matlab_formula(formula_str):
+def extract_matlab_formula__OLD(formula_str):
     """Конвертує формулу у MATLAB синтаксис"""
     # Заміна індексів
     formula = formula_str.replace('_{', '(').replace('}', '+1)')
@@ -90,8 +89,7 @@ def generate_matlab_script(variant_number, variants_data):
     if not variant:
         return None
     
-    # Парсимо формули
-    main_formula = extract_matlab_formula(variant['formula'])
+    main_formula = variant['formula'] # main_formula = extract_matlab_formula(variant['formula'])
     b_i_formula = variant['b_i']
     y2_formula = variant['y2']
     #a1_matlab_formula = extract_matlab_formula(a1_formula)
@@ -104,13 +102,13 @@ def generate_matlab_script(variant_number, variants_data):
     
     if "для парних" in b_i_formula:
         parts = b_i_formula.split("для парних")
-        b_formula_even = parts[0].replace("b_i=", "").strip()
+        b_formula_even = parts[0].replace("b_{i}=", "").strip()
         
         if "для непарних" in b_i_formula:
             parts2 = b_i_formula.split("для непарних")
-            b_formula_odd = parts2[0].split(";")[1].replace("b_i=", "").strip()
+            b_formula_odd = parts2[0].split(";")[1].replace("b_{i}=", "").strip()
     else:
-        b_formula_even = b_i_formula.replace("b_i=", "").strip()
+        b_formula_even = b_i_formula.replace("b_{i}=", "").strip()
         b_formula_odd = b_formula_even
 
     # Аналізуємо формулу C2_ij
@@ -119,22 +117,35 @@ def generate_matlab_script(variant_number, variants_data):
         C2_ij_formula = C2_ij_formula_.split("C_{2ij}=")[1].strip()
     
     # Генеруємо MATLAB код
-    matlab_code = f"""%% Лабораторна робота - Варіант {variant_number}
+    matlab_code = f"""%% Варіант №{variant_number}
 % Обчислення виразу: {variant['formula']}
 
 clear all; close all; clc;
 
+DEFAULT_N = 2;
+CHOICE_MANUAL = 1;
+CHOICE_RAND = 2;
+
+RESULT_TYPE = '{variant['type']}';
+
+try
 %% 1. Ввід розмірності
-n = input('Введіть розмірність n: ');
-while n <= 0
-    n = input('Розмірність повинна бути > 0. Введіть n: ');
-end
+    n = input('Введіть розмірність n: ');
+    while n <= 0
+        n = input('Розмірність повинна бути > 0. Введіть n: ');
+    end
 
 %% 2. Вибір способу вводу даних
-disp('Виберіть спосіб вводу даних:');
-disp('1 - Ввід з клавіатури');
-disp('2 - Випадкова генерація');
-choice = input('Ваш вибір (1 або 2): ');
+    choice = 0;
+    disp('Виберіть спосіб вводу даних:');
+    while n != CHOICE_MANUAL && n != CHOICE_RAND
+        n = input('%d - ввід з клавіатури, %d - випадкова генерація: ', CHOICE_MANUAL, CHOICE_RAND);
+    end
+catch
+    n = DEFAULT_N;
+    choice = CHOICE_RAND;
+    printf('%d (значення за замовчуванням, ввід не підтримується системою виконання MATLAB-коду)\\n', n);
+end
 
 %% 3. Створення матриць та векторів
 if choice == 1
@@ -206,14 +217,12 @@ disp('Обчислення вектора b...');
 b = zeros(n, 1);
 for i = 1:n
     % Формула для b_i
-    if mod(i, 2) == 0  % парні
-        % Формула для парних: {b_formula_even}
-        b_i_val = {b_formula_even.replace('i', 'i').replace('^', '.^')};
-    else  % непарні
-        % Формула для непарних: {b_formula_odd}
-        b_i_val = {b_formula_odd.replace('i', 'i').replace('^', '.^')};
+    if mod(i, 2) == 0
+        b(i) = {convert_formula_to_MATLAB(b_formula_even)}; % для парних i
+    else
+        b(i) = {convert_formula_to_MATLAB(b_formula_odd)}; % для непарних i
     end
-    b(i) = b_i_val;
+    %% b(i) = b_i_val;
 end
 
 disp('Вектор b:');
@@ -275,7 +284,22 @@ disp(Y3);
 disp('Обчислення x...');
 {convert_formula_to_MATLAB(main_formula)};
 
-disp('Результат x:');
+[r, c] = size(x);
+
+printf('Результат (');
+if strcmp(RESULT_TYPE, 'матриця') && r == n && c == n
+    printf('матриця'); 
+elseif strcmp(RESULT_TYPE, 'стовпець') && r == n && c == 1
+    printf('стовпець');
+elseif strcmp(RESULT_TYPE, 'рядок') && r == 1 && c == n
+    printf('рядок');
+elseif strcmp(RESULT_TYPE, 'число') && r == 1 && c == 1
+    printf('число');
+else 
+    printf('неочікуваний формат');
+end
+
+printf(') x:\\n');
 disp(x);
 """
     

@@ -15,8 +15,7 @@ from docx.enum.text import WD_ALIGN_PARAGRAPH
 #    text = text.replace("'", "ᵀ")
 #    return text
 
-def convert_to_unicode(text_): # convert_to_normal_formula
-    text = text_
+def convert_to_unicode(text): # convert_to_normal_formula
     text = text.replace('_{1}', '₁')#.replace('_1', '₁')
     text = text.replace('_{2}', '₂')#.replace('_2', '₂')
     text = text.replace('_{3}', '₃')#.replace('_3', '₃')
