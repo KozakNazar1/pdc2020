@@ -317,58 +317,6 @@ def main():
         print(f"1. Відкрийте {filename} у MATLAB")
         print(f"2. Запустіть скрипт")
         print(f"3. Дотримуйтесь інструкцій на екрані")
-        
-        # Також зберігаємо спрощений варіант
-        simple_filename = f"variant_{variant_num}_simple.m"
-        simple_code = f"""%% Лабораторна робота - Варіант {variant_num}
-% Автоматично згенерований скрипт
-
-clear all; close all; clc;
-
-% Основні параметри
-n = 3; % Змініть розмірність при необхідності
-
-% Генерація випадкових даних
-A = randn(n);
-A1 = rand(n);
-A2 = 10*rand(n);
-B2 = 5*randn(n);
-b = rand(n, 1);
-b1 = rand(n, 1);
-c1 = rand(n, 1);
-
-% Обчислення векторів
-y1 = A * b;
-y2 = A1 * (b1 + c1); % Приклад, замініть на свою формулу
-
-% Матриця C2 (приклад)
-C2 = zeros(n);
-for i = 1:n
-    for j = 1:n
-        C2(i,j) = 1/(i + 2*j); % Приклад, замініть на свою формулу
-    end
-end
-
-% Матриця Y3
-Y3 = A2 * (B2 - C2); % Приклад, замініть на свою формулу
-
-% Основний вираз
-x = Y3^2 * y2 + Y3 * (y1 + y2); % Приклад, замініть на свою формулу
-
-% Вивід результатів
-disp('Результати:');
-disp('y1 = '); disp(y1);
-disp('y2 = '); disp(y2);
-disp('Y3 = '); disp(Y3);
-disp('x = '); disp(x);
-"""
-        
-        with open(simple_filename, 'w', encoding='utf-8') as f:
-            f.write(simple_code)
-        
-        print(f"4. Спрощений скрипт: {simple_filename}")
-    else:
-        print(f"Варіант {variant_num} не знайдено")
 
 if __name__ == "__main__":
     main()
