@@ -30,49 +30,18 @@ def parse_variants_file(filename):
                 })
     return variants
 
-def convert_to_normal_formula___________(formula_):
-    formula = formula_
-    formula = formula.replace('_{1}', '₁')#.replace('_1', '₁')
-    formula = formula.replace('_{2}', '₂')#.replace('_2', '₂')
-    formula = formula.replace('_{3}', '₃')#.replace('_3', '₃')
-    formula = formula.replace('^{2}', '²')#.replace('^2', '²')
-    formula = formula.replace('^{3}', '³')#.replace('^3', '³')
-    formula = formula.replace('_{i}', 'ᵢ')#.replace('_i', 'ᵢ')
-    formula = formula.replace('_{j}', 'ⱼ')#.replace('_j', 'ⱼ')
-    formula = formula.replace('_{ij}', 'ᵢⱼ')#.replace('_ij', 'ᵢⱼ')
-    #formula = formula.replace("'", "ᵀ")
-    
-    return formula
-
 def convert_formula_to_MATLAB(formula):
     formula = formula.replace('_{1}', '1')#.replace('_1', '1')
     formula = formula.replace('_{2}', '2')#.replace('_2', '2')
     formula = formula.replace('_{3}', '3')#.replace('_3', '3')
     formula = formula.replace('^{2}', '^2')
     formula = formula.replace('^{3}', '^3')
+    formula = formula.replace('^{4}', '^4')
     formula = formula.replace('_{i}', '(i)')#.replace('_i', '(i)')
     formula = formula.replace('_{j}', '(j)')#.replace('_j', '(j)')
     formula = formula.replace('_{ij}', '(i,j)')#.replace('_ij', '(i,j)')
     formula = formula.replace('_{2ij}', '2(i,j)')#.replace('_2ij', '2(i,j)')
     formula = formula.replace("^{'}", "'")
-    
-    return formula
-
-def extract_matlab_formula__OLD(formula_str):
-    """Конвертує формулу у MATLAB синтаксис"""
-    # Заміна індексів
-    formula = formula_str.replace('_{', '(').replace('}', '+1)')
-    formula = formula.replace('^{', '.^(').replace('}', '+1)')
-    formula = formula.replace('*', '.*')
-    formula = formula.replace("'", "'")  # транспонування залишаємо
-    
-    # Заміна змінних для MATLAB
-    formula = formula.replace('Y_{3}', 'Y3')
-    formula = formula.replace('Y3', 'Y3')
-    formula = formula.replace('y_{1}', 'y1')
-    formula = formula.replace('y_{2}', 'y2')
-    formula = formula.replace('y1', 'y1')
-    formula = formula.replace('y2', 'y2')
     
     return formula
 

@@ -2,25 +2,13 @@ from docx import Document
 from docx.shared import Pt
 from docx.enum.text import WD_ALIGN_PARAGRAPH
 
-#def convert_to_unicode__OLD(text):
-#    text = text.replace('_{', '_{').replace('}^{', '}^{')
-#    text = text.replace('^', '^')
-#    text = text.replace('y_{1}', 'y₁').replace('y_{2}', 'y₂')
-#    text = text.replace('Y_{3}', 'Y₃').replace('Y^{3}', 'Y³')
-#    text = text.replace('Y^{2}', 'Y²')
-#    text = text.replace('b_{1}', 'b₁').replace('c_{1}', 'c₁')
-#    text = text.replace('B_{2}', 'B₂').replace('C_{2}', 'C₂')
-#    text = text.replace('A_{1}', 'A₁').replace('A_{2}', 'A₂')
-#    text = text.replace('C_{ij}', 'Cᵢⱼ').replace('b_{i}', 'bᵢ')
-#    text = text.replace("'", "ᵀ")
-#    return text
-
 def convert_to_unicode(text): # convert_to_normal_formula
     text = text.replace('_{1}', '₁')#.replace('_1', '₁')
     text = text.replace('_{2}', '₂')#.replace('_2', '₂')
     text = text.replace('_{3}', '₃')#.replace('_3', '₃')
     text = text.replace('^{2}', '²')#.replace('^2', '²')
     text = text.replace('^{3}', '³')#.replace('^3', '³')
+    text = text.replace('^{4}', '⁴')#.replace('^4', '⁴')
     text = text.replace('_{i}', 'ᵢ')#.replace('_i', 'ᵢ')
     text = text.replace('_{j}', 'ⱼ')#.replace('_j', 'ⱼ')
     text = text.replace('_{ij}', 'ᵢⱼ')#.replace('_ij', 'ᵢⱼ')
