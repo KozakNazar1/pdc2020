@@ -15,20 +15,49 @@ def parse_variants_file(filename):
                 formula = parts[1]
                 type_text = parts[2]
                 b_i = parts[3]
-                a1 = parts[4]
-                a2 = parts[5]
-                c_ij = parts[6]
+                y2 = parts[4]
+                Y3 = parts[5]
+                C2_ij = parts[6]
                 
                 variants.append({
                     'number': number,
                     'formula': formula,
                     'type': type_text,
                     'b_i': b_i,
-                    'a1': a1,
-                    'a2': a2,
-                    'c_ij': c_ij
+                    'y2': y2,
+                    'Y3': Y3,
+                    'C2_ij': C2_ij
                 })
     return variants
+
+def convert_to_normal_formula___________(formula_):
+    formula = formula_
+    formula = formula.replace('_{1}', '₁')#.replace('_1', '₁')
+    formula = formula.replace('_{2}', '₂')#.replace('_2', '₂')
+    formula = formula.replace('_{3}', '₃')#.replace('_3', '₃')
+    formula = formula.replace('^{2}', '²')#.replace('^2', '²')
+    formula = formula.replace('^{3}', '³')#.replace('^3', '³')
+    formula = formula.replace('_{i}', 'ᵢ')#.replace('_i', 'ᵢ')
+    formula = formula.replace('_{j}', 'ⱼ')#.replace('_j', 'ⱼ')
+    formula = formula.replace('_{ij}', 'ᵢⱼ')#.replace('_ij', 'ᵢⱼ')
+    #formula = formula.replace("'", "ᵀ")
+    
+    return formula
+
+def convert_formula_to_MATLAB(formula_):
+    """Конвертує формулу у MATLAB синтаксис""" # (+)
+    formula = formula_
+    formula = formula.replace('_{1}', '1')#.replace('_1', '1')
+    formula = formula.replace('_{2}', '2')#.replace('_2', '2')
+    formula = formula.replace('_{3}', '3')#.replace('_3', '3')
+    formula = formula.replace('^{2}', '^2')
+    formula = formula.replace('^{3}', '^3')
+    formula = formula.replace('_{i}', '(i)')#.replace('_i', '(i)')
+    formula = formula.replace('_{j}', '(j)')#.replace('_j', '(j)')
+    formula = formula.replace('_{ij}', '(i,j)')#.replace('_ij', '(i,j)')
+    #formula = formula.replace("'", "ᵀ")
+    
+    return formula
 
 def extract_matlab_formula(formula_str):
     """Конвертує формулу у MATLAB синтаксис"""
@@ -64,9 +93,10 @@ def generate_matlab_script(variant_number, variants_data):
     # Парсимо формули
     main_formula = extract_matlab_formula(variant['formula'])
     b_i_formula = variant['b_i']
-    a1_formula = variant['a1']
-    a2_formula = variant['a2']
-    c_ij_formula = variant['c_ij']
+    y2_formula = variant['y2']
+    #a1_matlab_formula = extract_matlab_formula(a1_formula)
+    Y3_formula = variant['Y3']
+    C2_ij_formula_ = variant['C2_ij']
     
     # Аналізуємо формулу b_i (парні/непарні)
     b_formula_even = "1/(i^2 + 2)"  # за замовчуванням
@@ -83,10 +113,10 @@ def generate_matlab_script(variant_number, variants_data):
         b_formula_even = b_i_formula.replace("b_i=", "").strip()
         b_formula_odd = b_formula_even
 
-    # Аналізуємо формулу C_ij
-    c_formula = "1/(i + j)"  # приклад за замовчуванням
-    if "C_ij=" in c_ij_formula:
-        c_formula = c_ij_formula.split("C_ij=")[1].strip()
+    # Аналізуємо формулу C2_ij
+    C2_ij_formula = "1/(i + j)"  # за замовчуванням
+    if "C_{2ij}=" in C2_ij_formula_:
+        C2_ij_formula = C2_ij_formula_.split("C_{2ij}=")[1].strip()
     
     # Генеруємо MATLAB код
     matlab_code = f"""%% Лабораторна робота - Варіант {variant_number}
@@ -141,19 +171,34 @@ if choice == 1
         end
     end
     
+    disp('=== Ввід вектора b1 ===');
+    b1 = zeros(n);
+    for i = 1:n
+        b1(i) = input(sprintf('b1(%d) = ', i));
+    end
+
+    disp('=== Ввід вектора c1 ===');
+    c1 = zeros(n);
+    for i = 1:n
+        c1(i) = input(sprintf('c1(%d) = ', i));
+    end
 else
     %% Випадкова генерація
-    disp('Генеруються випадкові матриці...');
-    A = randn(n);    % Нормальний розподіл
-    A1 = rand(n);    % Рівномірний розподіл [0,1]
-    A2 = 10*rand(n); % Рівномірний розподіл [0,10]
-    B2 = 5*randn(n); % Нормальний розподіл *5
+    disp('Генеруються випадкові матриці та вектори...');
+    A = randi([1, 9], n, n);
+    A1 = randi([1, 9], n, n)
+    A2 = randi([1, 9], n, n)
+    B2 = randi([1, 9], n, n)
+    b1 = randi([1, 9], n, 1);
+    c1 = randi([1, 9], n, 1);
     
     disp('Згенеровані матриці:');
     disp('A = '); disp(A);
     disp('A1 = '); disp(A1);
     disp('A2 = '); disp(A2);
     disp('B2 = '); disp(B2);
+    disp('b1 = '); disp(b1);
+    disp('c1 = '); disp(c1);
 end
 
 %% 4. Обчислення вектора b згідно формули
@@ -179,89 +224,56 @@ y1 = A * b;
 disp('Вектор y1 = A*b:');
 disp(y1);
 
-%% 6. Вектори b1 та c1
-if choice == 1
-    %% Ввід з клавіатури
-    disp('=== Ввід вектора b1 ===');
-    b1 = zeros(n);
-    for i = 1:n
-        b1(i) = input(sprintf('b1(%d) = ', i));
-    end
+%% 6_. Вектори b1 та c1 %%%%%%%%%%%%%%%%%%%% MOVE !!!!!!!!!!!!!!!!!!!!!
+%%if choice == 1
+%%     %% Ввід з клавіатури
+%%     disp('=== Ввід вектора b1 ===');
+%%     b1 = zeros(n);
+%%     for i = 1:n
+%%         b1(i) = input(sprintf('b1(%d) = ', i));
+%%     end
+%%
+%%    disp('=== Ввід вектора c1 ===');
+%%    c1 = zeros(n);
+%%    for i = 1:n
+%%        c1(i) = input(sprintf('c1(%d) = ', i));
+%%    end
+%%else
+%%    %% Dипадкові значення
+%%    b1 = rand(n, 1);
+%%    c1 = rand(n, 1);
+%%end
 
-    disp('=== Ввід вектора c1 ===');
-    c1 = zeros(n);
-    for i = 1:n
-        c1(i) = input(sprintf('c1(%d) = ', i));
-    end
-else
-    %% Dипадкові значення
-    b1 = rand(n, 1);
-    c1 = rand(n, 1);
-end
-
-%% 7. Обчислення y2 згідно формули: {a1_formula}
+%% 6. Обчислення y2:
 disp('Обчислення y2...');
 % Формула містить A1, b1, c1
-% Аналізуємо формулу
-y2_formula = '{a1_formula}';
-
-% Простий парсинг формули y2
-if 'b1+c1' in y2_formula:
-    y2 = A1 * (b1 + c1);
-elseif 'b1+2c1' in y2_formula:
-    y2 = A1 * (b1 + 2*c1);
-elif '3b1+c1' in y2_formula:
-    y2 = A1 * (3*b1 + c1);
-elif 'b1-2c1' in y2_formula:
-    y2 = A1 * (b1 - 2*c1);
-else:
-    % За замовчуванням
-    y2 = A1 * b1;
-end
+y2 = {convert_formula_to_MATLAB(y2_formula)};
 
 disp('Вектор y2:');
 disp(y2);
 
-%% 8. Обчислення матриці C2 згідно формули: {c_ij_formula}
+%% 7. Обчислення матриці C2:
 disp('Обчислення матриці C2...');
 C2 = zeros(n);
 for i = 1:n
     for j = 1:n
-        % Формула для C_ij: {c_formula}
-        C2(i,j) = {c_formula.replace('i', 'i').replace('j', 'j').replace('^', '.^')};
+        C2(i,j) = {convert_formula_to_MATLAB(C2_ij_formula)};
     end
 end
 
 disp('Матриця C2:');
 disp(C2);
 
-%% 9. Обчислення Y3 згідно формули: {a2_formula}
+%% 8. Обчислення Y3:
 disp('Обчислення матриці Y3...');
-% Аналізуємо формулу Y3
-y3_formula = '{a2_formula}';
-
-if 'B2-C2' in y3_formula:
-    Y3 = A2 * (B2 - C2);
-elif 'C2-B2' in y3_formula:
-    Y3 = A2 * (C2 - B2);
-elif 'B2+C2' in y3_formula:
-    Y3 = A2 * (B2 + C2);
-elif '10B2+C2' in y3_formula:
-    Y3 = A2 * (10*B2 + C2);
-elif 'C2+2B2' in y3_formula:
-    Y3 = A2 * (C2 + 2*B2);
-else:
-    % За замовчуванням
-    Y3 = A2 * B2;
-end
+Y3 = {convert_formula_to_MATLAB(Y3_formula)};
 
 disp('Матриця Y3:');
 disp(Y3);
 
-%% 10. Обчислення основного виразу
-disp('Обчислення основного виразу...');
-% Аналізуємо основну формулу
-main_formula_str = '{main_formula}';
+%% 9. Обчислення x:
+disp('Обчислення x...');
+{convert_formula_to_MATLAB(main_formula)};
 
 if 'Y3^2*y2' in main_formula_str and 'Y3(y1+y2)' in main_formula_str:
     x = Y3^2 * y2 + Y3 * (y1 + y2);

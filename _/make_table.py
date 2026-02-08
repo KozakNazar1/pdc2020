@@ -50,7 +50,7 @@ def read_variants_file(filename):
                 
                 variants.append({
                     'number': number,
-                    'formula': formula + ' ' + type_text,
+                    'formula': formula + ', ' + type_text,
                     'b_i': b_i,
                     'y2': 'y₂=' + y2,
                     'Y3': 'Y₃=' + Y3 + '\n\n' + C2_ij
