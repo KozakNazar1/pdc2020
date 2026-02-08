@@ -1,7 +1,19 @@
 import re
 
+def replace_skip(text, old, new, skip=0, count=None):
+    occ = 0 
+    def repl(match):
+        nonlocal occ
+        occ += 1
+        if occ <= skip:
+            return match.group(0)
+        if count is not None and occ > skip + count:
+            return match.group(0)
+        return new
+    
+    return re.sub(re.escape(old), repl, text)
+
 def parse_variants_file(filename):
-    """Парсить файл з варіантами"""
     variants = []
     with open(filename, 'r', encoding='utf-8') as f:
         for line in f:
@@ -28,9 +40,46 @@ def parse_variants_file(filename):
                     'Y3': Y3,
                     'C2_ij': C2_ij
                 })
+                
     return variants
 
-def convert_formula_to_MATLAB(formula):
+def variants_redef(variants_data, year, group):
+    new_variants_data = variants_data
+
+    param_Y_formula_and_type = 17 * (year - 2025);
+    param_Y_b_i = 13 * (year - 2025);
+    param_Y_y2 = 11 * (year - 2025);
+    param_Y_Y3 = 7 * (year - 2025);
+    param_Y_C2_ij = 5 * (year - 2025);
+
+    variant_count = len(variants_data);
+    for index in range(variant_count):
+        print(index)
+        new_variants_data[index]['number'] = variants_data[index]['number'];
+        new_variants_data[index]['formula'] = variants_data[(index + param_Y_formula_and_type)%variant_count]['formula'];
+        new_variants_data[index]['type'] = variants_data[(index + param_Y_formula_and_type)%variant_count]['type'];
+        new_variants_data[index]['b_i'] = variants_data[(index + param_Y_b_i)%variant_count]['b_i'];
+        new_variants_data[index]['y2'] = variants_data[(index + param_Y_y2)%variant_count]['y2'];
+        new_variants_data[index]['Y3'] = variants_data[(index + param_Y_Y3)%variant_count]['Y3'];
+        new_variants_data[index]['C2_ij'] = variants_data[(index + param_Y_C2_ij)%variant_count]['C2_ij'];
+        
+    param_G_A = (group - 300) & 1;
+    param_G_B = ((group - 300) & 2) >> 1; # !
+    param_G_C = ((group - 300) & 4) >> 2; # !
+    param_G_D = ((group - 300) & 8) >> 3; # !
+
+    for v in new_variants_data:
+        v['formula'] = replace_skip(v['formula'], '^{2}', '^{2_}', param_G_A, 2 - param_G_B);
+        v['formula'] = replace_skip(v['formula'], '^{3}', '^{2}', param_G_A, 2 - param_G_B);
+        v['formula'] = replace_skip(v['formula'], '^{2_}', '^{3}', param_G_A, 2 - param_G_B);
+        
+        v['formula'] = replace_skip(v['formula'], '+', '+_', param_G_C, 2 - param_G_D);
+        v['formula'] = replace_skip(v['formula'], '+-', '+', param_G_C, 2 - param_G_D);
+        v['formula'] = replace_skip(v['formula'], '+_', '-', param_G_C, 2 - param_G_D);
+
+    return new_variants_data
+
+def convert_MATLAB_formula(formula):
     formula = formula.replace('_{1}', '1')#.replace('_1', '1')
     formula = formula.replace('_{2}', '2')#.replace('_2', '2')
     formula = formula.replace('_{3}', '3')#.replace('_3', '3')
@@ -45,10 +94,7 @@ def convert_formula_to_MATLAB(formula):
     
     return formula
 
-def generate_matlab_script(variant_number, variants_data):
-    """Генерує MATLAB скрипт для конкретного варіанту"""
-    
-    # Знаходимо варіант
+def generate_matlab_script(variants_data, year, group, variant_number):
     variant = None
     for v in variants_data:
         if v['number'] == variant_number:
@@ -62,7 +108,7 @@ def generate_matlab_script(variant_number, variants_data):
     b_i_formula = variant['b_i']
     y2_formula = variant['y2']
     Y3_formula = variant['Y3']
-    C2_ij_formula_ = variant['C2_ij']
+    C2_ij_formula = variant['C2_ij']
     
     b_formula_even = "1/(i^2 + 2)"  # за замовчуванням
     b_formula_odd = "1/i"  # за замовчуванням
@@ -78,14 +124,13 @@ def generate_matlab_script(variant_number, variants_data):
         b_formula_even = b_i_formula.replace("b_{i}=", "").strip()
         b_formula_odd = b_formula_even
 
-    # Аналізуємо формулу C2_ij
-    C2_ij_formula = "1/(i + j)"  # за замовчуванням
-    if "C_{2ij}=" in C2_ij_formula_:
-        C2_ij_formula = C2_ij_formula_.split("C_{2ij}=")[1].strip()
+    if "C_{2ij}=" in C2_ij_formula:
+        C2_ij_formula = C2_ij_formula.split("C_{2ij}=")[1].strip()
+    else:
+        C2_ij_formula = "1/(i + j)"
     
-    # Генеруємо MATLAB код
     matlab_code = f"""%% Варіант №{variant_number}
-% Обчислення виразу: {convert_formula_to_MATLAB(variant['formula'])}
+% Обчислення виразу: {convert_MATLAB_formula(variant['formula'])}
 
 clear all; close all; clc;
 
@@ -185,9 +230,9 @@ b = zeros(n, 1);
 for i = 1:n
     % Формула для b_i
     if mod(i, 2) == 0
-        b(i) = {convert_formula_to_MATLAB(b_formula_even)}; % для парних i
+        b(i) = {convert_MATLAB_formula(b_formula_even)}; % для парних i
     else
-        b(i) = {convert_formula_to_MATLAB(b_formula_odd)}; % для непарних i
+        b(i) = {convert_MATLAB_formula(b_formula_odd)}; % для непарних i
     end
     %% b(i) = b_i_val;
 end
@@ -203,7 +248,7 @@ disp(y1);
 %% 6. Обчислення y2:
 disp('Обчислення y2...');
 % Формула містить A1, b1, c1
-y2 = {convert_formula_to_MATLAB(y2_formula)};
+y2 = {convert_MATLAB_formula(y2_formula)};
 
 disp('Вектор y2:');
 disp(y2);
@@ -213,7 +258,7 @@ disp('Обчислення матриці C2...');
 C2 = zeros(n);
 for i = 1:n
     for j = 1:n
-        C2(i,j) = {convert_formula_to_MATLAB(C2_ij_formula)};
+        C2(i,j) = {convert_MATLAB_formula(C2_ij_formula)};
     end
 end
 
@@ -222,14 +267,14 @@ disp(C2);
 
 %% 8. Обчислення Y3:
 disp('Обчислення матриці Y3...');
-Y3 = {convert_formula_to_MATLAB(Y3_formula)};
+Y3 = {convert_MATLAB_formula(Y3_formula)};
 
 disp('Матриця Y3:');
 disp(Y3);
 
 %% 9. Обчислення x:
 disp('Обчислення x...');
-{convert_formula_to_MATLAB(main_formula)};
+{convert_MATLAB_formula(main_formula)};
 
 [r, c] = size(x);
 
@@ -248,17 +293,20 @@ end
 
 printf(' x:\\n');
 disp(x);
-printf('(варіант №{variant_number})');
+printf('({year - 1}/{year} н.р., KI-{str(group)}, варіант №{variant_number}: {convert_MATLAB_formula(variant['formula']).replace("'", "''")})');
 """
     
     return matlab_code
 
 
-def main():
-    """Основна функція"""
-    
-    # Читаємо варіанти
+def main():    
+    # Читаємо базові варіанти
     variants = parse_variants_file('variants_data.txt')
+
+    # Створюємо нові варіанти
+    year = 2026
+    group = 308
+    variants_redef(variants, year, group)
     
     if not variants:
         print("Не знайдено варіантів у файлі")
@@ -276,11 +324,11 @@ def main():
         return
     
     # Генеруємо MATLAB код
-    matlab_code = generate_matlab_script(variant_num, variants)
+    matlab_code = generate_matlab_script(variants, year, group, variant_num)
     
     if matlab_code:
         # Зберігаємо у файл
-        filename = f"variant_{variant_num}.m"
+        filename = f"variant_{year - 1}{year}_ki{group}_{variant_num}.m"
         with open(filename, 'w', encoding='utf-8') as f:
             f.write(matlab_code)
         
