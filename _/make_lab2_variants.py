@@ -94,7 +94,7 @@ def create_doc_from_variants(variants, year, group, output_file):
     print("Document created:", output_file)
 
 if __name__ == "__main__":
-    variants = parse_variants_file("variants_data.txt")
+    variants = parse_variants_file("make_lab2_variants_data.txt")
     
     year = 2026
     group = 308

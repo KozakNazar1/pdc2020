@@ -303,7 +303,7 @@ printf('({year - 1}/{year} н.р., KI-{str(group)}, варіант №{variant_n
 
 def main():    
     # Читаємо базові варіанти
-    variants = parse_variants_file('variants_data.txt')
+    variants = parse_variants_file('make_lab2_variants_data.txt')
 
     # Створюємо нові варіанти
     year = 2026
