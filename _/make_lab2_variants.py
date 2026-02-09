@@ -100,4 +100,5 @@ if __name__ == "__main__":
     group = 308
     # ...
 
+
     create_doc_from_variants(variants, year, group, "V_LAB1__.docx")
