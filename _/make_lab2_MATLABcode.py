@@ -1,6 +1,8 @@
 import re
 
-def replace_skip(text, old, new, skip=0, count=None):
+from make_lab2_common_functions import replace_skip, parse_variants_file, variants_redef
+
+def replace_skip___OLD(text, old, new, skip=0, count=None):
     occ = 0 
     def repl(match):
         nonlocal occ
@@ -13,7 +15,7 @@ def replace_skip(text, old, new, skip=0, count=None):
     
     return re.sub(re.escape(old), repl, text)
 
-def parse_variants_file(filename):
+def parse_variants_file___OLD(filename):
     variants = []
     with open(filename, 'r', encoding='utf-8') as f:
         for line in f:
@@ -43,7 +45,7 @@ def parse_variants_file(filename):
                 
     return variants
 
-def variants_redef(variants_data, year, group):
+def variants_redef___OLD(variants_data, year, group):
     new_variants_data = variants_data
 
     param_Y_formula_and_type = 17 * (year - 2025);
