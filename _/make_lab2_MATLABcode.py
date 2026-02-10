@@ -1,7 +1,7 @@
 import re
-
 from pathlib import Path
-from make_labs_common_functions import replace_skip, parse_variants_file, variants_redef
+
+from make_labs_common_functions import replace_skip, parse_variants_file, lab2_variants_redef
 
 def convert_MATLAB_formula(formula):
     formula = formula.replace('_{1}', '1')#.replace('_1', '1')
@@ -18,7 +18,7 @@ def convert_MATLAB_formula(formula):
     
     return formula
 
-def generate_matlab_script(variants_data, year, group, variant_number):
+def make_lab2_matlab_script(variants_data, year, group, variant_number):
     variant = None
     for v in variants_data:
         if v['number'] == variant_number:
@@ -222,20 +222,20 @@ printf('({year - 1}/{year} н.р., KI-{str(group)}, варіант №{variant_n
     
     return matlab_code
 
-
-def main():    
-    # Читаємо базові варіанти
-    variants = parse_variants_file('lab2_variants_data.txt')
-
+def main():
     YEAR_FIRST = 2026
     YEAR_LAST = 2027
     GROUP_FIRST = 301
     GROUP_LAST = 309
+    LAB2_VARIANTS_DATA_FILE_NAME = "lab2_variants_data.txt"
+
+    # Читаємо базові варіанти
+    variants = parse_variants_file(LAB2_VARIANTS_DATA_FILE_NAME)
 
     for year in range(YEAR_FIRST, YEAR_LAST + 1):
         for group in range(GROUP_FIRST, GROUP_LAST + 1):    
             # Створюємо нові варіанти
-            variants = variants_redef(variants, year, group)
+            variants = lab2_variants_redef(variants, year, group)
     
             if not variants:
                 print("Не знайдено варіантів у файлі")
@@ -243,7 +243,7 @@ def main():
     
             for variant_num in range(1, 30 + 1):
                 # Генеруємо MATLAB код
-                matlab_code = generate_matlab_script(variants, year, group, variant_num)
+                matlab_code = make_lab2_matlab_script(variants, year, group, variant_num)
     
                 if matlab_code:                    
                     #  Створюємо шлях до файлу

@@ -3,7 +3,7 @@ from docx.shared import Cm
 from docx.enum.text import WD_ALIGN_PARAGRAPH
 from docx.oxml.shared import OxmlElement, qn
 import os
-
+from pathlib import Path
 
 def set_cell_width(cell, width):
     tc = cell._tc
@@ -14,12 +14,12 @@ def set_cell_width(cell, width):
     tcPr.append(tcW)
 
 
-def generate_variants_docx(
-    img_dir,
-    out_file,
-    variant_count,
+def make_lab3_variants_and_save_in_docx(
     year,
-    group
+    group,
+    variant_count,
+    img_dir,
+    output_file
 ):
     doc = Document()
 
@@ -83,22 +83,30 @@ def generate_variants_docx(
     for cell, w in zip(hdr, widths):
         set_cell_width(cell, w)
 
-    doc.save(out_file)
-    print(f'Готово: створено файл "{out_file}"')
+    doc.save(output_file)
+    print("Created:", output_file)
 
 if __name__ == "__main__":
     YEAR = 2026
 
     IMG_DIR = "image_l3"
+    YEAR_FIRST = 2026
+    YEAR_LAST = 2027
     GROUP_FIRST = 301
     GROUP_LAST = 309
     VARIANT_COUNT = 30
 
-    for group in range(GROUP_FIRST, GROUP_LAST + 1):
-        generate_variants_docx(
-            img_dir=IMG_DIR,
-            out_file="PRO_LAB3_VARIANTS/l3_variants_ki" + str(group) + "_" + str(YEAR - 1) + str(YEAR) + ".docx",
-            variant_count=VARIANT_COUNT,
-            year=YEAR,
-            group=group
-        )
+    for year in range(YEAR_FIRST, YEAR_LAST + 1):
+        for group in range(GROUP_FIRST, GROUP_LAST + 1):
+            # Створюємо шлях до файлу
+            filename = "PRO_LAB3_VARIANTS/" + str(year - 1) + "_" + str(year) + "/KI" + str(group) + "/l3_variants_ki" + str(group) + "_" + str(year - 1) + str(year) + ".docx"
+            path = Path(filename)            
+            path.parent.mkdir(parents=True, exist_ok=True) # if path.parent != Path("."):
+
+            make_lab3_variants_and_save_in_docx(
+                year=year,
+                group=group,
+                variant_count=VARIANT_COUNT,
+                img_dir=IMG_DIR,
+                output_file=filename
+            )
