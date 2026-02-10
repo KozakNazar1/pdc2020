@@ -1,85 +1,7 @@
 import re
 
-from make_lab2_common_functions import replace_skip, parse_variants_file, variants_redef
-
-def replace_skip___OLD(text, old, new, skip=0, count=None):
-    occ = 0 
-    def repl(match):
-        nonlocal occ
-        occ += 1
-        if occ <= skip:
-            return match.group(0)
-        if count is not None and occ > skip + count:
-            return match.group(0)
-        return new
-    
-    return re.sub(re.escape(old), repl, text)
-
-def parse_variants_file___OLD(filename):
-    variants = []
-    with open(filename, 'r', encoding='utf-8') as f:
-        for line in f:
-            line = line.strip()
-            if not line or line.startswith('#'):
-                continue
-            
-            parts = line.split('|')
-            if len(parts) == 7:
-                number = int(parts[0])
-                formula = parts[1]
-                type_text = parts[2]
-                b_i = parts[3]
-                y2 = parts[4]
-                Y3 = parts[5]
-                C2_ij = parts[6]
-                
-                variants.append({
-                    'number': number,
-                    'formula': formula,
-                    'type': type_text,
-                    'b_i': b_i,
-                    'y2': y2,
-                    'Y3': Y3,
-                    'C2_ij': C2_ij
-                })
-                
-    return variants
-
-def variants_redef___OLD(variants_data, year, group):
-    new_variants_data = variants_data
-
-    param_Y_formula_and_type = 17 * (year - 2025);
-    param_Y_b_i = 13 * (year - 2025);
-    param_Y_y2 = 11 * (year - 2025);
-    param_Y_Y3 = 7 * (year - 2025);
-    param_Y_C2_ij = 5 * (year - 2025);
-
-    variant_count = len(variants_data);
-    for index in range(variant_count):
-        print(index)
-        new_variants_data[index]['number'] = variants_data[index]['number'];
-        new_variants_data[index]['formula'] = variants_data[(index + param_Y_formula_and_type)%variant_count]['formula'];
-        new_variants_data[index]['type'] = variants_data[(index + param_Y_formula_and_type)%variant_count]['type'];
-        new_variants_data[index]['b_i'] = variants_data[(index + param_Y_b_i)%variant_count]['b_i'];
-        new_variants_data[index]['y2'] = variants_data[(index + param_Y_y2)%variant_count]['y2'];
-        new_variants_data[index]['Y3'] = variants_data[(index + param_Y_Y3)%variant_count]['Y3'];
-        new_variants_data[index]['C2_ij'] = variants_data[(index + param_Y_C2_ij)%variant_count]['C2_ij'];
-        
-    param_G_A = (group - 300) & 1;
-    param_G_B = ((group - 300) & 2) >> 1; # !
-    param_G_C = ((group - 300) & 4) >> 2; # !
-    param_G_D = ((group - 300) & 8) >> 3; # !
-
-    for v in new_variants_data:
-        v['formula'] = replace_skip(v['formula'], '^{2}', '^{2_}', param_G_A, 2 - param_G_B);
-        v['formula'] = replace_skip(v['formula'], '^{3}', '^{2}', param_G_A, 2 - param_G_B);
-        v['formula'] = replace_skip(v['formula'], '^{2_}', '^{3}', param_G_A, 2 - param_G_B);
-        
-        v['formula'] = replace_skip(v['formula'], '+', '+_', param_G_C, 2 - param_G_D);
-        v['formula'] = replace_skip(v['formula'], '+-', '+', param_G_C, 2 - param_G_D);
-        v['formula'] = replace_skip(v['formula'], '+_', '-', param_G_C, 2 - param_G_D);
-
-    return new_variants_data
+from pathlib import Path
+from make_labs_common_functions import replace_skip, parse_variants_file, variants_redef
 
 def convert_MATLAB_formula(formula):
     formula = formula.replace('_{1}', '1')#.replace('_1', '1')
@@ -303,42 +225,42 @@ printf('({year - 1}/{year} н.р., KI-{str(group)}, варіант №{variant_n
 
 def main():    
     # Читаємо базові варіанти
-    variants = parse_variants_file('make_lab2_variants_data.txt')
+    variants = parse_variants_file('lab2_variants_data.txt')
 
-    # Створюємо нові варіанти
-    year = 2026
-    group = 308
-    variants_redef(variants, year, group)
+    YEAR_FIRST = 2026
+    YEAR_LAST = 2027
+    GROUP_FIRST = 301
+    GROUP_LAST = 309
+
+    for year in range(YEAR_FIRST, YEAR_LAST + 1):
+        for group in range(GROUP_FIRST, GROUP_LAST + 1):    
+            # Створюємо нові варіанти
+            variants = variants_redef(variants, year, group)
     
-    if not variants:
-        print("Не знайдено варіантів у файлі")
-        return
+            if not variants:
+                print("Не знайдено варіантів у файлі")
+                return
     
-    # Вибір варіанту
-    print("Доступні варіанти:")
-    for v in variants:
-        print(f"Варіант {v['number']}: {v['formula'][:50]}...")
+            for variant_num in range(1, 30 + 1):
+                # Генеруємо MATLAB код
+                matlab_code = generate_matlab_script(variants, year, group, variant_num)
     
-    try:
-        variant_num = int(input("\nВиберіть номер варіанту: "))
-    except:
-        print("Невірний номер варіанту")
-        return
-    
-    # Генеруємо MATLAB код
-    matlab_code = generate_matlab_script(variants, year, group, variant_num)
-    
-    if matlab_code:
-        # Зберігаємо у файл
-        filename = f"variant_{year - 1}{year}_ki{group}_{variant_num}.m"
-        with open(filename, 'w', encoding='utf-8') as f:
-            f.write(matlab_code)
-        
-        print(f"\nMATLAB скрипт згенеровано: {filename}")
-        print(f"\nІнструкція:")
-        print(f"1. Відкрийте {filename} у MATLAB")
-        print(f"2. Запустіть скрипт")
-        print(f"3. Дотримуйтесь інструкцій на екрані")
+                if matlab_code:                    
+                    #  Створюємо шлях до файлу
+                    filename = f"PRO_LAB2_VARIANTSANDMATLAB/{year - 1}_{year}/KI{group}/MATLABscripts/l2_{year - 1}{year}_ki{group}_{variant_num}_MATLAB.m"
+                    path = Path(filename)
+                    path.parent.mkdir(parents=True, exist_ok=True) # if path.parent != Path("."):
+
+                    # Зберігаємо у файл
+                    with open(filename, 'w', encoding='utf-8') as f:
+                        f.write(matlab_code)
+                        print("Created:", filename)
+
+    print(f"\nMATLAB скрипти згенеровано: тека PRO_LAB2_VARIANTSANDMATLAB")
+    print(f"\nІнструкція:")
+    print(f"1. Відкрийте один із скриптів у MATLAB")
+    print(f"2. Запустіть його")
+    print(f"3. Дотримуйтесь інструкцій на екрані")
 
 if __name__ == "__main__":
     main()

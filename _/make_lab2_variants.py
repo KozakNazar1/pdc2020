@@ -2,6 +2,9 @@ from docx import Document
 from docx.shared import Pt
 from docx.enum.text import WD_ALIGN_PARAGRAPH
 
+from pathlib import Path
+from make_labs_common_functions import replace_skip, parse_variants_file, variants_redef
+
 def convert_to_math_unicode_formula(text):
     text = text.replace('_{1}', '₁')#.replace('_1', '₁')
     text = text.replace('_{2}', '₂')#.replace('_2', '₂')
@@ -17,7 +20,7 @@ def convert_to_math_unicode_formula(text):
     
     return text
 
-def parse_variants_file(filename):
+def parse_variants_file__OLD(filename):
     variants = []
     with open(filename, 'r', encoding='utf-8') as f:
         for line in f:
@@ -91,13 +94,29 @@ def create_doc_from_variants(variants, year, group, output_file):
                     run.font.name = 'Times New Roman'
     
     doc.save(output_file)
-    print("Document created:", output_file)
+    print("Created:", output_file)
 
 if __name__ == "__main__":
-    variants = parse_variants_file("make_lab2_variants_data.txt")
+    variants_ = parse_variants_file("lab2_variants_data.txt")
     
-    year = 2026
-    group = 308
-    # ...
+    YEAR_FIRST = 2026
+    YEAR_LAST = 2027
+    GROUP_FIRST = 301
+    GROUP_LAST = 309
 
-    create_doc_from_variants(variants, year, group, "V_LAB1__.docx")
+    for year in range(YEAR_FIRST, YEAR_LAST + 1):
+        for group in range(GROUP_FIRST, GROUP_LAST + 1):
+            # Створюємо нові варіанти
+            variants = variants_redef(variants_, year, group)
+            
+            # Створюємо шлях до файлу
+            filename = "PRO_LAB2_VARIANTSANDMATLAB/" + str(year - 1) + "_" + str(year) + "/KI" + str(group) + "/l2_variants_ki" + str(group) + "_" + str(year - 1) + str(year) + ".docx"
+            path = Path(filename)            
+            path.parent.mkdir(parents=True, exist_ok=True) # if path.parent != Path("."):
+
+            create_doc_from_variants(
+                variants,
+                year,
+                group, 
+                filename                         
+            )

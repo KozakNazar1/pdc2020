@@ -54,7 +54,6 @@ def variants_redef(variants_data, year, group):
 
     variant_count = len(variants_data);
     for index in range(variant_count):
-        print(index)
         new_variants_data[index]['number'] = variants_data[index]['number'];
         new_variants_data[index]['formula'] = variants_data[(index + param_Y_formula_and_type)%variant_count]['formula'];
         new_variants_data[index]['type'] = variants_data[(index + param_Y_formula_and_type)%variant_count]['type'];
@@ -78,3 +77,83 @@ def variants_redef(variants_data, year, group):
         v['formula'] = replace_skip(v['formula'], '+_', '-', param_G_C, 2 - param_G_D);
 
     return new_variants_data
+
+import math
+
+def get_permutation_by_number(n, k):
+    """
+    Обчислює кількість перестановок
+    
+    Args:
+        n: кількість елементів
+        k: доступні елементи
+    
+    Returns:
+        Кількість перестановк
+    """
+    
+    return tuple(math.factorial(n) // math.factorial(n - k))
+
+
+def get_permutation_by_number(num, n, digits=None):
+    """
+    Обчислює перестановку за її номером
+    
+    Args:
+        num: номер перестановки (0-based)
+        n: довжина перестановки
+        digits: доступні цифри
+    
+    Returns:
+        Перестановка з номером num
+    """
+    if digits is None:
+        digits = list(range(10))
+    
+    digits = sorted(digits)
+    if n > len(digits):
+        raise ValueError(f"n ({n}) > кількість цифр ({len(digits)})")
+    
+    result = []
+    available = list(digits)
+    
+    for i in range(n):
+        fact = math.factorial(n - i - 1)
+        index = num // fact
+        num %= fact
+        
+        result.append(available.pop(index))
+    
+    return tuple(result)
+
+def permutation_number(permutation, digits=None):
+    """
+    Обчислює номер перестановки в лексикографічному порядку
+    
+    Args:
+        perm: перестановка (кортеж або список)
+        digits: всі доступні цифри у порядку сортування
+    
+    Returns:
+        Номер перестановки (починаючи з 0)
+    """
+    if digits is None:
+        digits = sorted(permutation)  # цифри у порядку зростання
+    
+    n = len(permutation)
+    total = 0
+    
+    # Копіюємо список доступних цифр
+    available = list(digits)
+    
+    for i, digit in enumerate(permutation):
+        # Знаходимо позицію цієї цифри серед доступних
+        pos = available.index(digit)
+        
+        # Кількість перестановок, що починаються з менших цифр
+        total += pos * math.factorial(n - i - 1)
+        
+        # Видаляємо використану цифру
+        available.remove(digit)
+    
+    return total
