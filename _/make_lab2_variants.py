@@ -20,36 +20,6 @@ def convert_to_math_unicode_formula(text):
     
     return text
 
-def parse_variants_file__OLD(filename):
-    variants = []
-    with open(filename, 'r', encoding='utf-8') as f:
-        for line in f:
-            line = line.strip()
-            if not line or line.startswith('#'):
-                continue
-            
-            parts = line.split('|')
-            if len(parts) == 7:
-                number = int(parts[0])
-                formula = parts[1]
-                type_text = parts[2]
-                b_i = parts[3]
-                y2 = parts[4]
-                Y3 = parts[5]
-                C2_ij = parts[6]
-                
-                variants.append({
-                    'number': number,
-                    'formula': formula, # + ', ' + type_text,
-                    'type': type_text, #formula + ', ' + type_text,
-                    'b_i': b_i,
-                    'y2': y2,
-                    'Y3': Y3, # 'Y₃=' + Y3 + '\n\n' + C2_ij
-                    'C2_ij': C2_ij
-                })
-                
-    return variants
-
 def create_doc_from_variants(variants, year, group, output_file):
     doc = Document()
     
