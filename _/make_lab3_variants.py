@@ -60,21 +60,21 @@ def make_lab3_variants_and_save_in_docx(
         row[0].text = str(i)
         row[0].paragraphs[0].alignment = WD_ALIGN_PARAGRAPH.CENTER
 
-        param_Y = 7 * (year - 2025);
+        param_Y = year - 2023;
         param_G = group - 295;
 
-        imgA = os.path.join(img_dir, f"{(i - 1 + param_Y) % variant_count + 1}_1.jpg")
+        imgA = os.path.join(img_dir, f"{(i - 1 + param_Y + param_G // 7) % variant_count + 1}_1.jpg")
         imgB = os.path.join(img_dir, f"{(i - 1 + param_G) % variant_count + 1}_2.jpg")
 
         if os.path.exists(imgA):
             p = row[1].paragraphs[0]
             p.alignment = WD_ALIGN_PARAGRAPH.CENTER
-            p.add_run().add_picture(imgA, width=Cm(1.2))
+            p.add_run().add_picture(imgA, width=Cm(1.8))
 
         if os.path.exists(imgB):
             p = row[2].paragraphs[0]
             p.alignment = WD_ALIGN_PARAGRAPH.CENTER
-            p.add_run().add_picture(imgB, width=Cm(1.2))
+            p.add_run().add_picture(imgB, width=Cm(1.8))
 
         for cell, w in zip(row, widths):
             set_cell_width(cell, w)
