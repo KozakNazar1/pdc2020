@@ -1,4 +1,6 @@
 import re
+import shutil
+import os
 
 def replace_skip(text, old, new, skip=0, count=None):
     occ = 0 
@@ -157,3 +159,10 @@ def permutation_number(permutation, digits=None):
         available.remove(digit)
     
     return total
+
+def n_copy(n, src):
+    for index in range(1, n + 1):
+        dst = f"{index}_{src}"
+        shutil.copyfile(src, dst)
+
+    print(f"Cтворено копії 2_{src} … 30_{src} файлу {src}.")
